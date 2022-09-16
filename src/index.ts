@@ -1,13 +1,6 @@
 import Handlebars from "handlebars";
 import fs from "fs";
-
-Handlebars.registerHelper('inc', function(number, options) {
-  if(typeof(number) === 'undefined' || number === null)
-      return null;
-
-  // Increment by inc parameter if it exists or just by one
-  return number + (options.hash.inc || 1);
-});
+import "./helpers";
 
 type Variables = Record<string, any>;
 
@@ -69,7 +62,10 @@ export const GenerateFile = (paths: RootConfig[]) => {
         const eachValues = (eachVariables as any)[each];
         for (let j = 0; j < eachValues.length; j++) {
           let eachVariableValue = eachValues[j];
-          const file = fs.readFileSync(sourceFolder + "/" + config.source, "utf-8");
+          const file = fs.readFileSync(
+            sourceFolder + "/" + config.source,
+            "utf-8"
+          );
           const template = Handlebars.compile(file);
           const configVariables = {
             ...variables,
