@@ -1,0 +1,20 @@
+version: '3'
+name: kafka-cluster
+services:
+  {{#each ports}}
+  zookeeper-{{inc @index}}:
+    image: bitnami/zookeeper:3.8
+    networks:
+      - kafka-cluster-networking
+    ports:
+      - {{zookeeper_port}}:2181
+    environment:
+      - ZOO_PORT_NUMBER=2181
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVER_ID={{inc @index}}
+      - ZOO_SERVERS={{#each ../ports}}zookeeper-{{inc @index}}:2888:3888,{{/each}}
+  {{/each}}
+
+networks:
+  kafka-cluster-networking:
+    driver: bridge
