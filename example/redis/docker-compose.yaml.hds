@@ -11,7 +11,7 @@ services:
       - {{clusterPort}}:{{clusterPort}}
     command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-      - ../{{port}}/example/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./{{port}}/redis.conf:/usr/local/etc/redis/redis.conf
   {{/each}}
 
 networks:

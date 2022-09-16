@@ -1,8 +1,8 @@
 #!/bin/sh
 
-ts-node src/index.ts
+ts-node src/redis.ts
 
-cd dist_files/example
+cd dist_files/redis
 docker compose up -d --remove-orphans
 cd ../../
 

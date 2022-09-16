@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd dist_files/example
+cd dist_files/redis
 docker compose down -v --remove-orphans
 cd ../../
 

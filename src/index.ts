@@ -1,33 +1,25 @@
 import Handlebars from "handlebars";
 import fs from "fs";
 
-const paths = [
-  {
-    source: "example/docker-compose.yaml.hds",
-    outputFolder: "dist_files",
-    configPath: "{{ports.port}}",
-    eachVariables: {
-      ports: [
-        { port: 7000, clusterPort: 17000 },
-        { port: 7001, clusterPort: 17001 },
-        { port: 7002, clusterPort: 17002 },
-        { port: 7003, clusterPort: 17003 },
-        { port: 7004, clusterPort: 17004 },
-        { port: 7005, clusterPort: 17005 },
-      ],
-    },
-    variables: {
-      announceIp: "192.168.193.218"
-    },
-    configs: [
-      {
-        id: "redis_conf",
-        source: "example/redis.conf.hds",
-        variables: {},
-      },
-    ],
-  },
-];
+type Variables = Record<string, any>;
+
+type SubConfig = {
+  id: string;
+  source: string;
+  variables: Variables;
+};
+
+type EachVariable = Record<string, any>;
+
+export type RootConfig = {
+  sourceFolder: string;
+  source: string;
+  outputFolder: string;
+  configPath: string;
+  eachVariables: Record<string, EachVariable>;
+  variables: Variables;
+  configs: SubConfig[];
+};
 
 const writeFile = (path: string, data: string) => {
   const pathSplit = path.split("/");
@@ -44,46 +36,50 @@ const writeFile = (path: string, data: string) => {
   }
   fs.writeFileSync(path, data, "utf-8");
 };
-for (const {
-  source,
-  outputFolder,
-  variables,
-  configs,
-  eachVariables,
-  configPath,
-} of paths) {
-  const target = outputFolder + "/" + source.replace(".hds", "");
-  const file = fs.readFileSync(source, "utf-8");
-  const template = Handlebars.compile(file);
-  const targetVariables = {
-    ...variables,
-    ...eachVariables,
-  };
-  writeFile(target, template(targetVariables));
-  for (let index = 0; index < configs.length; index++) {
-    const config = configs[index];
-    for (const each in eachVariables) {
-      const eachValues = (eachVariables as any)[each];
-      for (let j = 0; j < eachValues.length; j++) {
-        let eachVariableValue = eachValues[j];
-        const file = fs.readFileSync(config.source, "utf-8");
-        const template = Handlebars.compile(file);
-        const configVariables = {
-          ...variables,
-          ...config.variables,
-          [each]: eachVariableValue,
-        };
-        const configPathResolved =
-          Handlebars.compile(configPath)(configVariables);
-        const target =
-          outputFolder +
-          "/" +
-          `${configPathResolved}/` +
-          config.source.replace(".hds", "");
-        console.log(`target: ${target}`);
-        console.log(`configVariables: ${JSON.stringify(configVariables)}`);
-        writeFile(target, template(configVariables));
+
+export const GenerateFile = (paths: RootConfig[]) => {
+  for (const {
+    source,
+    sourceFolder,
+    outputFolder,
+    variables,
+    configs,
+    eachVariables,
+    configPath,
+  } of paths) {
+    const target = outputFolder + "/" + source.replace(".hds", "");
+    const file = fs.readFileSync(sourceFolder + "/" + source, "utf-8");
+    const template = Handlebars.compile(file);
+    const targetVariables = {
+      ...variables,
+      ...eachVariables,
+    };
+    writeFile(target, template(targetVariables));
+    for (let index = 0; index < configs.length; index++) {
+      const config = configs[index];
+      for (const each in eachVariables) {
+        const eachValues = (eachVariables as any)[each];
+        for (let j = 0; j < eachValues.length; j++) {
+          let eachVariableValue = eachValues[j];
+          const file = fs.readFileSync(sourceFolder + "/" + config.source, "utf-8");
+          const template = Handlebars.compile(file);
+          const configVariables = {
+            ...variables,
+            ...config.variables,
+            [each]: eachVariableValue,
+          };
+          const configPathResolved =
+            Handlebars.compile(configPath)(configVariables);
+          const target =
+            outputFolder +
+            "/" +
+            `${configPathResolved}/` +
+            config.source.replace(".hds", "");
+          console.log(`target: ${target}`);
+          console.log(`configVariables: ${JSON.stringify(configVariables)}`);
+          writeFile(target, template(configVariables));
+        }
       }
     }
   }
-}
+};
