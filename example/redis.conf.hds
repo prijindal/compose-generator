@@ -1,0 +1,10 @@
+port {{ports.port}}
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+# cluster-port {{ports.clusterPort}}
+appendonly yes
+bind 0.0.0.0
+protected-mode no
+loglevel verbose
+cluster-announce-ip {{announceIp}}
